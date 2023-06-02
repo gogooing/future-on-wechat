@@ -3,7 +3,7 @@ FROM python:3.10
 LABEL maintainer="foo@bar.com"
 ARG TZ='Asia/Shanghai'
 
-ARG CHATGPT_ON_WECHAT_VER
+ARG FUTURE_ON_WECHAT_VER
 
 ENV BUILD_PREFIX=/app
 
@@ -12,7 +12,7 @@ RUN apt-get update  \
         wget \
         curl  \
     && rm -rf /var/lib/apt/lists/* \
-    && export BUILD_GITHUB_TAG=${CHATGPT_ON_WECHAT_VER:-`curl -sL "https://api.github.com/repos/gogooing/future-on-wechat/releases/latest" | \
+    && export BUILD_GITHUB_TAG=${FUTURE_ON_WECHAT_VER:-`curl -sL "https://api.github.com/repos/gogooing/future-on-wechat/releases/latest" | \
         grep '"tag_name":' | \
         sed -E 's/.*"([^"]+)".*/\1/'`} \
     && wget -t 3 -T 30 -nv -O future-on-wechat-${BUILD_GITHUB_TAG}.tar.gz \
