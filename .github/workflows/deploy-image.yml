@@ -1,0 +1,66 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# GitHub recommends pinning actions to a commit SHA.
+# To get a newer version, you will need to update the SHA.
+# You can also reference a tag or branch, but the action may change without warning.
+
+#给这个工作流起一个名字，这个名字在 GitHub Actions 页面中会显示。
+name: Create and publish a Docker image
+
+#指定触发这个工作流的事件。在这个例子中，这个工作流会在代码被 push 到 master 分支，或者在仓库中创建新的 tag 或者分支时触发。
+on:
+  push:
+    branches: ['master']
+  create:
+#定义一些环境变量。在这个例子中，定义了 Docker 镜像仓库的地址（ghcr.io）和 Docker 镜像的名称（和 GitHub 仓库的名称相同）。
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+#定义一系列的任务。在这个例子中，只定义了一个任务：build-and-push-image。
+jobs:
+  build-and-push-image:
+    #指定任务运行的环境。在这个例子中，任务运行在最新版本的 Ubuntu 环境中。
+    runs-on: ubuntu-latest
+    #设置 GitHub 仓库的权限。在这个例子中，设置了读取仓库内容的权限和写入 GitHub Packages 的权限。
+    permissions:
+      contents: read
+      packages: write
+    
+    #定义任务的步骤。
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true
+          file: ./docker/Dockerfile.latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - uses: actions/delete-package-versions@v4
+        with:
+          package-name: 'future-on-wechat'
+          package-type: 'container'
+          min-versions-to-keep: 10
+          delete-only-untagged-versions: 'true'
+          token: ${{ secrets.GITHUB_TOKEN }}
