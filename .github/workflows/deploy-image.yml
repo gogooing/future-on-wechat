@@ -30,7 +30,7 @@ jobs:
       contents: read
       packages: write
     
-    #定义任务的步骤。
+    #定义任务的步骤
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
